@@ -1,7 +1,7 @@
 index=0,stop=document.getElementById("stop"),star=document.getElementById("star"),rand=document.getElementById("rand"),imgs=document.getElementById("thumbs").getElementsByTagName("img"),big=document.getElementById("big"),c=10,i=null;
 function ChangeDisabled(e){
 　if(e=="1"){
-	stop.disabled=false;
+	document.getElementById("stop").disabled=false;
 	star.disabled=true;
     rand.disabled=true;
     i=setInterval(play,50);
