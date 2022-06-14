@@ -1,22 +1,50 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  
+  <meta charset="UTF-8">
+  <title>給猶豫不定的你</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="javascript.js" defer></script>
 </head>
+
 <body>
-<button id="star" onclick="ChangeDisabled(1)">開始</button>
-<button id="stop" disabled onclick="ChangeDisabled(2)">暫停</button>
-<button id="rand" onclick="ChangeDisabled(3)">隨機</button>
-<div>
-  <img id="big" src="https://ascii2d.net/thumbnail/e/c/8/d/ec8d13a38bb5dc5d69b52fb1f2f82651.jpg">
+  <div class="index">
+    <div id="text">
+      <h1>給猶豫不定的你</h1>
+      <i>這是給突然想看動畫，卻難以抉擇該看哪部時，就由此網站來幫你選擇吧!</i>
+    </div>
+    <div>
+      <div class="box">
+        <div class="container">
+          <div><img id="img_show" onmouseover="showtext()" src="https://p2.bahamut.com.tw/B/ACG/c/59/0000120759.JPG">
+          </div>
+          <div>
+            <button id="btn_img_change" onclick="star(1)">開始</button>
+            <button id="btn_img_random"onclick="star(2)">隨機</button>
+            <button id="btn_ago" onclick="nextimg(-1)">❮</button>
+            <button id="btn_next" onclick="nextimg(1)">❯</button>
+          </div>
+        </div>
+        <div id="img_text"><span id="text_show" hidden></span></div>
+      </div>
+      <div id="img_hidden" hidden>
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/59/0000120759.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/30/0000116930.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/24/0000107524.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/23/0000117023.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/24/0000120624.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/10/0000114310.JPG">
+        <img class="anime" src="https://p2.bahamut.com.tw/B/ACG/c/96/0000120396.JPG">
+      </div>
+    </div>
+    <div class="myweb">
+      <p>關於我:<br>
+        所有內容皆為網路上資訊，若有侵犯您的權益，請立即告知，將立即撤除<br>
+        資工2A 109B29689 鄭丞宏<br>
+        E-mail:109B29689@mailst.cjcu.edu.tw</p>
+    </div>
   </div>
-  <div id="thumbs">
-  <img class="small" src="https://ascii2d.net/thumbnail/e/c/8/d/ec8d13a38bb5dc5d69b52fb1f2f82651.jpg" hidden>
-  <img class="small" src="https://ascii2d.net/thumbnail/b/7/9/3/b793fc24f5c685289626ea1f3f1428ed.jpg" hidden>
-  <img class="small" src="https://ascii2d.net/thumbnail/2/9/2/c/292c922a35e60777237592f9a3f782e8.jpg" hidden>
-  <img class="small" src="https://ascii2d.net/thumbnail/8/3/5/a/835a3b63a4b1f7b7d4f4ddd48976155c.jpg" hidden>
-  </div>
-  <p id="a"></p>
-  <script type="text/javascript" src="index.js"></script>
 </body>
+
 </html>
