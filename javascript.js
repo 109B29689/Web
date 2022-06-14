@@ -61,6 +61,8 @@ function showtext()
 function nextimg(n) {
   if(!s)
   {
+    it.style.opacity=0.3;
+    ts.hidden=true;
     pic+=n;
     if(pic==imgs.length) pic=0;
     if(pic<0) pic=imgs.length-1;
