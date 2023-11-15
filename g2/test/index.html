@@ -2,115 +2,88 @@
 <html lang="en">
 
 <head>
-    <title>拼圖遊戲</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <style>
-        #puzzle {
-            display: flex;
-            flex-wrap: wrap;
-            width: 500px;
-            height: 500px;
-            margin: 0 auto;
-            background-image: url('https://i.imgur.com/9QJfZzU.jpg');
-            background-size: cover;
-            background-position: center;
-        }
-
-        .piece {
-            width: 100px;
-            height: 100px;
-            background-color: white;
-            background-size: cover;
-            background-position: center;
-            border: 1px solid black;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>拼圖網頁</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
 <body>
-    <div class="container">
-        <h2>拼圖遊戲</h2>
-        <p>使用滑塊調整拼圖大小：</p>
-        <input type="range" min="2" max="6" value="3" class="slider" id="myRange">
-        <br><br>
-        <div id="puzzle" class="card"></div>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="imageInput">選擇圖片：</label>
+        <input type="file" id="imageInput" class="form-control mb-2">
+      </div>
+      <div class="col-md-6">
+        <label for="sliceSlider">切割刀數：</label>
+        <input type="range" id="sliceSlider" min="2" max="10" value="4" class="form-control-range mb-2">
+      </div>
     </div>
 
-    <script>
-        var pieces = [];
-        var size = 3;
+    <div class="row">
+      <div class="col-md-12">
+        <button id="startButton" class="btn btn-primary btn-block">開始拼圖</button>
+      </div>
+    </div>
 
-        $(document).ready(function () {
-            $("#myRange").on("input", function () {
-                size = parseInt($(this).val());
-                createPuzzle(size);
-            });
+    <div id="puzzleContainer" class="mt-5"></div>
+  </div>
 
-            createPuzzle(size);
-        });
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-        function createPuzzle(size) {
-            pieces = [];
-            $("#puzzle").empty();
+  <script>
+    $(document).ready(function () {
+      let imageSrc;
 
-            var width = 500 / size;
-            var height = 500 / size;
+      $('#imageInput').change(function () {
+        const input = this;
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            imageSrc = e.target.result;
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      });
 
-            for (var i = 0; i < size * size; i++) {
-                var piece = $("<div></div>");
-                piece.addClass("piece");
-                piece.css("width", width + "px");
-                piece.css("height", height + "px");
-                piece.css("background-image", "url('https://i.imgur.com/9QJfZzU.jpg')");
-                piece.css("background-position", -((i % size) * width) + "px " + -((Math.floor(i / size)) * height) + "px");
-                pieces.push(piece);
-            }
-
-            shuffle(pieces);
-
-            for (var i = 0; i < pieces.length; i++) {
-                $("#puzzle").append(pieces[i]);
-            }
-
-            $(".piece").draggable({
-                revert: "invalid",
-                cursor: "move",
-                start: function (event, ui) {
-                    $(this).css("z-index", 999);
-                },
-                stop: function (event, ui) {
-                    $(this).css("z-index", 1);
-                }
-            });
-
-            $("#puzzle").droppable({
-                drop: function (event, ui) {
-                    var piece1 = $(ui.draggable);
-                    var piece2 = $(this).children().eq(piece1.index());
-                    var index1 = piece1.index();
-                    var index2 = piece2.index();
-                    piece1.insertAfter(piece2);
-                    pieces[index1] = piece2;
-                    pieces[index2] = piece1;
-                }
-            });
+      $('#startButton').click(function () {
+        const sliceCount = $('#sliceSlider').val();
+        if (!imageSrc || isNaN(sliceCount) || sliceCount < 2) {
+          alert('請選擇圖片並設定正確的切割刀數。');
+          return;
         }
 
-        function shuffle(array) {
-            for (var i = array.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
-            }
+        const puzzleContainer = $('#puzzleContainer');
+        puzzleContainer.empty();
+
+        const imageSize = puzzleContainer.width();
+        const pieceSize = imageSize / sliceCount;
+
+        for (let i = 0; i < sliceCount; i++) {
+          for (let j = 0; j < sliceCount; j++) {
+            const piece = $('<div class="piece"></div>');
+            piece.css({
+              'width': pieceSize + 'px',
+              'height': pieceSize + 'px',
+              'background-image': 'url(' + imageSrc + ')',
+              'background-size': imageSize + 'px ' + imageSize + 'px',
+              'background-position': (-j * pieceSize) + 'px ' + (-i * pieceSize) + 'px'
+            });
+
+            piece.draggable({
+              containment: 'parent'
+            });
+
+            puzzleContainer.append(piece);
+          }
         }
-    </script>
+      });
+    });
+  </script>
+
 </body>
 
 </html>
