@@ -1,196 +1,168 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jigsaw Puzzle</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body translate="no">
-  <div class="container mt-4">
-    <div class="row">
-      <div class="col-md-4">
-        <div class="form-group">
-          <label for="difficulty">Difficulty</label>
-          <input type="range" class="form-control" min="2" max="16" value="4" id="difficulty">
-        </div>
-        <button class="btn btn-primary btn-block" id="startBtn">Start Puzzle</button>
-      </div>
-      <div class="col-md-8">
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  </head>
+  <body translate="no">
+    <div class="container mt-4">
+      <div class="row">
         <canvas id="canvas" width="800" height="532" style="border: 1px solid black;"></canvas>
       </div>
-      
+      <form>
+        <div class="form-group mt-3">
+          <label for="difficulty">難度</label>
+          <input type="range" class="form-control-range" min="2" max="5" value="4" id="difficulty">
+        </div>
+        <button class="btn btn-primary btn-block" id="startBtn">開始遊戲</button>
+      </form>
     </div>
-  </div>
 
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
-  <script src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js"></script>
-  <script>
-    $(document).ready(function () {
-      const PUZZLE_HOVER_TINT = "#009900";
-      const img = new Image();
-      const canvas = document.querySelector("#canvas");
-      const ctx = canvas.getContext("2d");
-      let difficulty = 4;
-      let pieces;
-      let puzzleWidth;
-      let puzzleHeight;
-      let pieceWidth;
-      let pieceHeight;
-      let currentPiece;
-      let currentDropPiece;
-      let mouse;
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js"></script>
+    <script>
+      $(document).ready(function () {
+        const PUZZLE_HOVER_TINT = "#009900";
+        const img = new Image();
+        const canvas = document.querySelector("#canvas");
+        const ctx = canvas.getContext("2d");
+        let difficulty = 3;
+        let pieces;
+        let puzzleWidth;
+        let puzzleHeight;
+        let pieceWidth;
+        let pieceHeight;
+        let currentPiece;
+        let currentDropPiece;
+        let mouse;
 
-      img.addEventListener("load", onImage, false);
-      img.src = "https://source.unsplash.com/random/800x532";
+        img.addEventListener("load", onImage, false);
+        img.src = "https://source.unsplash.com/random/800x532";
 
-      function initPuzzle() {
-        pieces = [];
-        mouse = { x: 0, y: 0 };
-        currentPiece = null;
-        currentDropPiece = null;
+        function initPuzzle() {
+          pieces = [];
+          mouse = { x: 0, y: 0 };
+          currentPiece = null;
+          currentDropPiece = null;
 
-        ctx.drawImage(img, 0, 0, puzzleWidth, puzzleHeight, 0, 0, puzzleWidth, puzzleHeight);
-        createTitle("Click to Start Puzzle");
-        buildPieces();
-      }
-
-      function setCanvas() {
-        canvas.width = puzzleWidth;
-        canvas.height = puzzleHeight;
-        canvas.style.border = "1px solid black";
-      }
-
-      function onImage() {
-        pieceWidth = Math.floor(img.width / difficulty);
-        pieceHeight = Math.floor(img.height / difficulty);
-        puzzleWidth = pieceWidth * difficulty;
-        puzzleHeight = pieceHeight * difficulty;
-        setCanvas();
-        initPuzzle();
-      }
-
-      function createTitle(msg) {
-        ctx.fillStyle = "#000000";
-        ctx.globalAlpha = 0.4;
-        ctx.fillRect(100, puzzleHeight - 40, puzzleWidth - 200, 40);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.globalAlpha = 1;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "20px Arial";
-        ctx.fillText(msg, puzzleWidth / 2, puzzleHeight - 20);
-      }
-
-      function buildPieces() {
-        let i;
-        let piece;
-        let xPos = 0;
-        let yPos = 0;
-        for (i = 0; i < difficulty * difficulty; i++) {
-          piece = {};
-          piece.sx = xPos;
-          piece.sy = yPos;
-          pieces.push(piece);
-          xPos += pieceWidth;
-          if (xPos >= puzzleWidth) {
-            xPos = 0;
-            yPos += pieceHeight;
-          }
+          ctx.drawImage(img, 0, 0, puzzleWidth, puzzleHeight, 0, 0, puzzleWidth, puzzleHeight);
+          createTitle("點擊開始遊戲按鈕");
+          buildPieces();
         }
-        $("#startBtn").on("click", shufflePuzzle);
-      }
 
-      function shufflePuzzle() {
-        pieces = shuffleArray(pieces);
-        ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
-        let xPos = 0;
-        let yPos = 0;
-        for (const piece of pieces) {
-          piece.xPos = xPos;
-          piece.yPos = yPos;
-          ctx.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, xPos, yPos, pieceWidth, pieceHeight);
-          ctx.strokeRect(xPos, yPos, pieceWidth, pieceHeight);
-          xPos += pieceWidth;
-          if (xPos >= puzzleWidth) {
-            xPos = 0;
-            yPos += pieceHeight;
-          }
+        function setCanvas() {
+          canvas.width = puzzleWidth;
+          canvas.height = puzzleHeight;
+          canvas.style.border = "1px solid black";
         }
-        $("#canvas").on("pointerdown", onPuzzleClick);
-      }
 
-      function checkPieceClicked() {
-        for (const piece of pieces) {
-          if (
-            mouse.x < piece.xPos ||
-            mouse.x > piece.xPos + pieceWidth ||
-            mouse.y < piece.yPos ||
-            mouse.y > piece.yPos + pieceHeight
-          ) {
-            // PIECE NOT HIT
-          } else {
-            return piece;
-          }
+        function onImage() {
+          pieceWidth = Math.floor(img.width / difficulty);
+          pieceHeight = Math.floor(img.height / difficulty);
+          puzzleWidth = pieceWidth * difficulty;
+          puzzleHeight = pieceHeight * difficulty;
+          setCanvas();
+          initPuzzle();
         }
-        return null;
-      }
 
-      function updatePuzzle(e) {
-        currentDropPiece = null;
-        mouse.x = e.offsetX - canvas.offsetLeft;
-        mouse.y = e.offsetY - canvas.offsetTop;
-        ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
-        for (const piece of pieces) {
-          if (piece == currentPiece) {
-            continue;
+        function createTitle(msg) {
+          ctx.fillStyle = "#000000";
+          ctx.globalAlpha = 0.4;
+          ctx.fillRect(100, puzzleHeight - 40, puzzleWidth - 200, 40);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.globalAlpha = 1;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = "20px Arial";
+          ctx.fillText(msg, puzzleWidth / 2, puzzleHeight - 20);
+        }
+
+        function buildPieces() {
+          let i;
+          let piece;
+          let xPos = 0;
+          let yPos = 0;
+          for (i = 0; i < difficulty * difficulty; i++) {
+            piece = {};
+            piece.sx = xPos;
+            piece.sy = yPos;
+            pieces.push(piece);
+            xPos += pieceWidth;
+            if (xPos >= puzzleWidth) {
+              xPos = 0;
+              yPos += pieceHeight;
+            }
           }
-          ctx.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.xPos, piece.yPos, pieceWidth, pieceHeight);
-          ctx.strokeRect(piece.xPos, piece.yPos, pieceWidth, pieceHeight);
-          if (currentDropPiece == null) {
+          $("#startBtn").on("click", shufflePuzzle);
+        }
+
+        function shufflePuzzle() {
+          pieces = shuffleArray(pieces);
+          ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
+          let xPos = 0;
+          let yPos = 0;
+          for (const piece of pieces) {
+            piece.xPos = xPos;
+            piece.yPos = yPos;
+            ctx.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, xPos, yPos, pieceWidth, pieceHeight);
+            ctx.strokeRect(xPos, yPos, pieceWidth, pieceHeight);
+            xPos += pieceWidth;
+            if (xPos >= puzzleWidth) {
+              xPos = 0;
+              yPos += pieceHeight;
+            }
+          }
+          $("#canvas").on("pointerdown", onPuzzleClick);
+        }
+
+        function checkPieceClicked() {
+          for (const piece of pieces) {
             if (
               mouse.x < piece.xPos ||
               mouse.x > piece.xPos + pieceWidth ||
               mouse.y < piece.yPos ||
               mouse.y > piece.yPos + pieceHeight
             ) {
-              // NOT OVER
+              // PIECE NOT HIT
             } else {
-              currentDropPiece = piece;
-              ctx.save();
-              ctx.globalAlpha = 0.4;
-              ctx.fillStyle = PUZZLE_HOVER_TINT;
-              ctx.fillRect(currentDropPiece.xPos, currentDropPiece.yPos, pieceWidth, pieceHeight);
-              ctx.restore();
+              return piece;
             }
           }
+          return null;
         }
-        ctx.save();
-        ctx.globalAlpha = 0.6;
-        ctx.drawImage(
-          img,
-          currentPiece.sx,
-          currentPiece.sy,
-          pieceWidth,
-          pieceHeight,
-          mouse.x - pieceWidth / 2,
-          mouse.y - pieceHeight / 2,
-          pieceWidth,
-          pieceHeight
-        );
-        ctx.restore();
-        ctx.strokeRect(mouse.x - pieceWidth / 2, mouse.y - pieceHeight / 2, pieceWidth, pieceHeight);
-      }
 
-      function onPuzzleClick(e) {
-        mouse.x = e.offsetX - canvas.offsetLeft;
-        mouse.y = e.offsetY - canvas.offsetTop;
-        currentPiece = checkPieceClicked();
-        if (currentPiece !== null) {
-          ctx.clearRect(currentPiece.xPos, currentPiece.yPos, pieceWidth, pieceHeight);
+        function updatePuzzle(e) {
+          currentDropPiece = null;
+          mouse.x = e.offsetX - canvas.offsetLeft;
+          mouse.y = e.offsetY - canvas.offsetTop;
+          ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
+          for (const piece of pieces) {
+            if (piece == currentPiece) {
+              continue;
+            }
+            ctx.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.xPos, piece.yPos, pieceWidth, pieceHeight);
+            ctx.strokeRect(piece.xPos, piece.yPos, pieceWidth, pieceHeight);
+            if (currentDropPiece == null) {
+              if (
+                mouse.x < piece.xPos ||
+                mouse.x > piece.xPos + pieceWidth ||
+                mouse.y < piece.yPos ||
+                mouse.y > piece.yPos + pieceHeight
+              ) {
+                // NOT OVER
+              } else {
+                currentDropPiece = piece;
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = PUZZLE_HOVER_TINT;
+                ctx.fillRect(currentDropPiece.xPos, currentDropPiece.yPos, pieceWidth, pieceHeight);
+                ctx.restore();
+              }
+            }
+          }
           ctx.save();
-          ctx.globalAlpha = 0.9;
+          ctx.globalAlpha = 0.6;
           ctx.drawImage(
             img,
             currentPiece.sx,
@@ -203,72 +175,95 @@
             pieceHeight
           );
           ctx.restore();
-          $("#canvas").on("pointermove", updatePuzzle);
-          $("#canvas").on("pointerup", pieceDropped);
+          ctx.strokeRect(mouse.x - pieceWidth / 2, mouse.y - pieceHeight / 2, pieceWidth, pieceHeight);
         }
-      }
 
-      function gameOver() {
-        $("#canvas").off("pointerdown");
-        $("#canvas").off("pointermove");
-        $("#canvas").off("pointerup");
-        initPuzzle();
-      }
-
-      function pieceDropped() {
-        $("#canvas").off("pointermove");
-        $("#canvas").off("pointerup");
-        if (currentDropPiece !== null) {
-          let tmp = { xPos: currentPiece.xPos, yPos: currentPiece.yPos };
-          currentPiece.xPos = currentDropPiece.xPos;
-          currentPiece.yPos = currentDropPiece.yPos;
-          currentDropPiece.xPos = tmp.xPos;
-          currentDropPiece.yPos = tmp.yPos;
-        }
-        resetPuzzleAndCheckWin();
-      }
-
-      function resetPuzzleAndCheckWin() {
-        ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
-        let gameWin = true;
-        for (piece of pieces) {
-          ctx.drawImage(
-            img,
-            piece.sx,
-            piece.sy,
-            pieceWidth,
-            pieceHeight,
-            piece.xPos,
-            piece.yPos,
-            pieceWidth,
-            pieceHeight
-          );
-          ctx.strokeRect(piece.xPos, piece.yPos, pieceWidth, pieceHeight);
-          if (piece.xPos !== piece.sx || piece.yPos !== piece.sy) {
-            gameWin = false;
+        function onPuzzleClick(e) {
+          mouse.x = e.offsetX - canvas.offsetLeft;
+          mouse.y = e.offsetY - canvas.offsetTop;
+          currentPiece = checkPieceClicked();
+          if (currentPiece !== null) {
+            ctx.clearRect(currentPiece.xPos, currentPiece.yPos, pieceWidth, pieceHeight);
+            ctx.save();
+            ctx.globalAlpha = 0.9;
+            ctx.drawImage(
+              img,
+              currentPiece.sx,
+              currentPiece.sy,
+              pieceWidth,
+              pieceHeight,
+              mouse.x - pieceWidth / 2,
+              mouse.y - pieceHeight / 2,
+              pieceWidth,
+              pieceHeight
+            );
+            ctx.restore();
+            $("#canvas").on("pointermove", updatePuzzle);
+            $("#canvas").on("pointerup", pieceDropped);
           }
         }
-        if (gameWin) {
-          setTimeout(gameOver, 500);
+
+        function gameOver() {
+          $("#canvas").off("pointerdown");
+          $("#canvas").off("pointermove");
+          $("#canvas").off("pointerup");
+          initPuzzle();
         }
-      }
 
-      function shuffleArray(o) {
-        for (var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x) {}
-        return o;
-      }
+        function pieceDropped() {
+          $("#canvas").off("pointermove");
+          $("#canvas").off("pointerup");
+          if (currentDropPiece !== null) {
+            let tmp = { xPos: currentPiece.xPos, yPos: currentPiece.yPos };
+            currentPiece.xPos = currentDropPiece.xPos;
+            currentPiece.yPos = currentDropPiece.yPos;
+            currentDropPiece.xPos = tmp.xPos;
+            currentDropPiece.yPos = tmp.yPos;
+          }
+          resetPuzzleAndCheckWin();
+        }
 
-      function updateDifficulty(e) {
-        difficulty = e.target.value;
-        pieceWidth = Math.floor(img.width / difficulty);
-        pieceHeight = Math.floor(img.height / difficulty);
-        puzzleWidth = pieceWidth * difficulty;
-        puzzleHeight = pieceHeight * difficulty;
-        gameOver();
-      }
+        function resetPuzzleAndCheckWin() {
+          ctx.clearRect(0, 0, puzzleWidth, puzzleHeight);
+          let gameWin = true;
+          for (piece of pieces) {
+            ctx.drawImage(
+              img,
+              piece.sx,
+              piece.sy,
+              pieceWidth,
+              pieceHeight,
+              piece.xPos,
+              piece.yPos,
+              pieceWidth,
+              pieceHeight
+            );
+            ctx.strokeRect(piece.xPos, piece.yPos, pieceWidth, pieceHeight);
+            if (piece.xPos !== piece.sx || piece.yPos !== piece.sy) {
+              gameWin = false;
+            }
+          }
+          if (gameWin) {
+            setTimeout(gameOver, 500);
+          }
+        }
 
-      $("#difficulty").on("input", updateDifficulty);
-    });
-  </script>
-</body>
+        function shuffleArray(o) {
+          for (var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x) {}
+          return o;
+        }
+
+        function updateDifficulty(e) {
+          difficulty = e.target.value;
+          pieceWidth = Math.floor(img.width / difficulty);
+          pieceHeight = Math.floor(img.height / difficulty);
+          puzzleWidth = pieceWidth * difficulty;
+          puzzleHeight = pieceHeight * difficulty;
+          gameOver();
+        }
+
+        $("#difficulty").on("input", updateDifficulty);
+      });
+    </script>
+  </body>
 </html>
