@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    #question {
+      font-size: 4em;
+      /* 調整字體大小 */
+    }
+
+    #options {
+      font-size: 2em;
+      width: 100%;
+      max-width: 40em;
+      /* 設定最大寬度 */
+      margin: 0 auto;
+      /* 水平置中 */
+    }
+
+    .btn,
+    p {
+      font-size: 2em;
+      /* 調整字體大小 */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5 text-center">
+    <div id="question-container" class="card">
+      <div class="card-header">
+        <h3 id="question" class="mb-0"></h3>
+      </div>
+      <div class="card-body">
+        <div id="options" class="row"></div>
+      </div>
+      <button class="btn btn-primary btn-block ok-btn mt-3" style="display: none;">確定</button>
+    </div>
+  </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      // 獲取URL參數
+      const urlParams = new URLSearchParams(window.location.search);
+      const questionBank = JSON.parse(decodeURIComponent(urlParams.get('questionBank')));
+      const selectedOptions = JSON.parse(decodeURIComponent(urlParams.get('selectedOptions')));
+
+      let questionLength = questionBank.length; // 題目數
+      let startTime = Date.now(); // 遊戲起始時間
+      var correctAnswers = 0; // 答對數
+      let userResponses = []; // 紀錄使用者選擇過程
+
+      // 增加觸發延遲時間（毫秒）
+      const delayTime = 500; // 0.5秒
+
+      let canTrigger = true; // 初始狀態可以觸發
+
+      // 設定語音合成API的語音
+      const synthesis = window.speechSynthesis;
+
+      function readText(text) {
+        // 創建 SpeechSynthesisUtterance 物件
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // 開始朗讀
+        synthesis.speak(utterance);
+      }
+
+
+      //---JS的部分 記錄所有過程
+
+      // 判斷遊玩次數
+      function showNextQuestion() {
+        if (questionBank.length > 0) {
+          const question = questionBank[0];
+          questionBank.splice(0, 1); // 刪除答過題目
+          displayQuestion(question);
+        } else {
+          const endTime = Date.now(); // 遊戲結束時間
+          const totalTimeInSeconds = (endTime - startTime) / 1000;
+          const accuracy = (correctAnswers / questionLength) * 100;
+          const showResult = $('#question-container');
+          showResult.empty();
+          // showResult.append('<p>答對率：' + accuracy.toFixed(2) + '%</p>');
+          // showResult.append('<p>總耗時：' + totalTimeInSeconds.toFixed(2) + '秒</p>');
+
+          showResult.append(`
+            <div class="card-header">
+              <h3>遊玩結果</h3>
+            </div>
+            <div class="card-body">
+              <p class="card-text">答對率：${accuracy.toFixed(2)}%</p>
+              <p class="card-text">總耗時：${totalTimeInSeconds.toFixed(2)}秒</p>
+              <button class="btn btn-primary btn-block confirm-btn">結束</button>
+            </div>
+          `);
+
+          $('.confirm-btn').click(function () {
+            window.location.href = 'g1setting.html';
+          });
+
+          console.log(userResponses);
+        }
+      }
+
+      // 顯示題目與選項
+      function displayQuestion(question) {
+
+        // 解除點擊事件
+        $('.option').off('click');
+        $('.ok-btn').off('click');
+
+        const textQuestion = question.question;
+        $('#question').text(textQuestion);
+        $('#options').empty(); // 清空選項
+        const options = question.options.slice();
+
+        if (question.answer.includes('.jpg')) {
+          let index = 0;
+          options.forEach(function (option) {
+            index++;
+            $('#options').append(`
+              <div class="col-md-4 mt-2">
+                <button id="option${index}" class="btn btn-outline-primary btn-block option" value="${option}">
+                  <img src="../img/animal/${option}" class="img-fluid">
+                </button>
+              </div>
+            `);
+          });
+        } else {
+          options.forEach(function (option) {
+            $('#options').append(`
+              <div class="col">
+                <button class="btn btn-outline-primary btn-block option" value="${option}">
+                  ${option}
+                </button>
+              </div>
+            `);
+          });
+        }
+
+        if ($.isEmptyObject(selectedOptions)) {
+
+          if (question.answer.includes('.jpg')) {
+            const audioArray = question.audio;
+
+            index = 0;
+            audioArray.forEach(function (audio) {
+              index++;
+              // 創建audio元素
+              const audioElement = new Audio(`../audio/${audio}.mp3`);
+
+              // 當指標進入選項時播放動物叫聲
+              $(`#option${index}`).mouseenter(function () {
+                if (canTrigger) {
+                  audioElement.play();
+                  // 設定觸發後的延遲時間
+                  canTrigger = false;
+                  setTimeout(function () {
+                    canTrigger = true;
+                  }, delayTime);
+                }
+              });
+            });
+          } else {
+            // 當指標進入選項時觸發朗讀
+            $('.option').mouseenter(function () {
+              if (canTrigger) {
+                const text = $(this).text();
+                readText(text);
+                // 設定觸發後的延遲時間
+                canTrigger = false;
+                setTimeout(function () {
+                  canTrigger = true;
+                }, delayTime);
+              }
+            });
+          }
+
+          // 為新添加的選項綁定點擊事件("無"二次確認)
+          $('.option').on('click', function () {
+            const thisQuestion = question.question; // 取得目前的題目
+            const selectedOption = $(this).val(); // 取得使用者的選項
+            const clickTime = (Date.now() - startTime) / 1000; // 紀錄點擊時間
+
+            //--- php判斷
+            const isCorrect = selectedOption === question.answer; // 判斷正確與否
+            //---
+
+            // 記錄使用者答題過程
+            userResponses.push({
+              question: thisQuestion,
+              isCorrect: isCorrect,
+              clickTime: clickTime
+            });
+
+            if (isCorrect) correctAnswers++; // 答對次數+1
+            showNextQuestion();
+          });
+        } else {
+          $('.ok-btn').show();
+
+          let temp;
+
+          if (question.answer.includes('.jpg')) {
+            const audioArray = question.audio;
+
+            index = 0;
+            audioArray.forEach(function (audio) {
+              index++;
+              // 創建audio元素
+              const audioElement = new Audio(`../audio/${audio}.mp3`);
+              // 當點擊選項時播放動物叫聲
+              $(`#option${index}`).click(function () {
+                const thisQuestion = question.question; // 取得目前的題目
+                const selectedOption = temp = $(this).val(); // 取得使用者的選項
+                const clickTime = (Date.now() - startTime) / 1000; // 紀錄點擊時間
+
+                //--- php判斷
+                const isCorrect = selectedOption === question.answer; // 判斷正確與否
+                //---
+
+                // 記錄使用者答題過程
+                userResponses.push({
+                  question: thisQuestion,
+                  isCorrect: isCorrect,
+                  clickTime: clickTime
+                });
+                
+                if (canTrigger) {
+                  audioElement.play();
+                  // 設定觸發後的延遲時間
+                  canTrigger = false;
+                  setTimeout(function () {
+                    canTrigger = true;
+                  }, delayTime);
+                }
+              });
+            });
+          } else {
+            $('.option').on('click', function () {
+              const thisQuestion = question.question; // 取得目前的題目
+              const selectedOption = temp = $(this).val(); // 取得使用者的選項
+              const clickTime = (Date.now() - startTime) / 1000; // 紀錄點擊時間
+
+              //--- php判斷
+              const isCorrect = selectedOption === question.answer; // 判斷正確與否
+              //---
+
+              // 記錄使用者答題過程
+              userResponses.push({
+                question: thisQuestion,
+                isCorrect: isCorrect,
+                clickTime: clickTime
+              });
+
+              if (canTrigger) {
+                // 觸發朗讀
+                const text = $(this).text();
+                readText(text);
+
+                // 設定觸發後的延遲時間
+                canTrigger = false;
+                setTimeout(function () {
+                  canTrigger = true;
+                }, delayTime);
+              }
+            });
+          }
+
+          $('.ok-btn').on('click', function () {
+            if (temp) {
+              const thisQuestion = question.question; // 取得目前的題目
+              const selectedOption = temp; // 取得使用者的選項
+              const clickTime = (Date.now() - startTime) / 1000; // 紀錄點擊時間
+
+              //--- php判斷
+              const isCorrect = selectedOption === question.answer; // 判斷正確與否
+              //---
+
+              // 記錄使用者答題過程
+              userResponses.push({
+                question: thisQuestion,
+                isCorrect: isCorrect,
+                clickTime: clickTime
+              });
+
+              if (isCorrect) correctAnswers++; // 答對次數+1
+
+              temp = '';
+
+              showNextQuestion();
+            } else {
+              alert('您尚未選擇');
+            }
+          });
+        }
+      }
+
+      // 當指標進入選項時觸發朗讀
+      $('#question').mouseenter(function () {
+        if (canTrigger) {
+          const text = $(this).text();
+          readText(text);
+          // 設定觸發後的延遲時間
+          canTrigger = false;
+          setTimeout(function () {
+            canTrigger = true;
+          }, delayTime);
+        }
+      });
+
+      showNextQuestion();
+
+      //---
+
+    });
+  </script>
+</body>
+
+</html>
