@@ -1,1 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
 
+<head>
+  <meta charset="UTF-8">
+  <title>選擇主題、難度、設定</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/css/bootstrap.min.css">
+  <style>
+    .step .card-header {
+      font-size: 4em;
+    }
+
+    .step .card-body .form-check,
+    .step .card-body .btn,
+    .step p {
+      font-size: 2em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="step-show" class="container mt-5">
+    <div id="step-theme" class="step card">
+      <h1 class="text-center card-header">選擇主題</h1>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-outline-primary btn-block theme-btn" data-theme="動物">動物</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-outline-primary btn-block theme-btn" data-theme="英文">英文</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-outline-primary btn-block theme-btn" data-theme="數學">數學</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step-difficulty" class="step card" style="display: none;">
+      <h1 class="text-center card-header">選擇難易度</h1>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-outline-secondary btn-block difficulty-btn" data-difficulty="簡單">簡單</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-outline-secondary btn-block difficulty-btn" data-difficulty="中等">中等</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-outline-secondary btn-block difficulty-btn" data-difficulty="困難">困難</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step-options" class="step card" style="display: none;">
+      <h1 class="text-center card-header">設定</h1>
+      <div class="card-body">
+        <!-- <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="option1" data-option="時間">
+          <label class="form-check-label" for="option1">時間</label>
+        </div> -->
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="option1" data-option="二次確認">
+          <label class="form-check-label" for="option1">二次確認</label>
+        </div>
+        <button class="btn btn-primary btn-block mt-3 next-btn">下一步</button>
+      </div>
+    </div>
+
+    <div id="step-result" class="step card text-center" style="display: none;">
+      <h1 class="card-header">選擇結果</h1>
+      <div class="card-body">
+        <p class="card-text">主題：<span id="selectedTheme"></span></p>
+        <p class="card-text">難度：<span id="selectedDifficulty"></span></p>
+        <p class="card-text">設定：<span id="selectedOptions"></span></p>
+        <button class="btn btn-secondary btn-block restart-btn">重新選擇</button>
+        <button class="btn btn-primary btn-block confirm-btn">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="g1qBank.js"></script>
+  <script>
+    $(document).ready(function () {
+      var selectedTheme = ''; // 主題
+      var selectedDifficulty = ''; // 難度
+      var selectedOptions = []; // 設定
+
+      // 增加觸發延遲時間（毫秒）
+      const delayTime = 500; // 0.5秒
+
+      let canTrigger = true; // 初始狀態可以觸發
+
+      // 設定語音合成API的語音
+      const synthesis = window.speechSynthesis;
+
+      function readText(text) {
+        // 創建 SpeechSynthesisUtterance 物件
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // 開始朗讀
+        synthesis.speak(utterance);
+      }
+
+      function showStep(step) {
+        $('#step-' + step).show();
+      }
+
+      function hideStep(step) {
+        $('#step-' + step).hide();
+      }
+
+      // 重設
+      function resetStep() {
+        selectedTheme = '';
+        selectedDifficulty = '';
+        selectedOptions = [];
+        $('#selectedTheme').text('');
+        $('#selectedDifficulty').text('');
+        $('#option1').prop('checked', false);
+        $('#option2').prop('checked', false);
+        $('#selectedOptions').text('');
+        hideStep('result');
+        showStep('theme');
+      }
+
+      // 當指標進入標題時觸發朗讀
+      $('h1').mouseenter(function () {
+        if (canTrigger) {
+          const title = $(this).text();
+          readText(title);
+
+          // 設定觸發後的延遲時間
+          canTrigger = false;
+          setTimeout(function () {
+            canTrigger = true;
+          }, delayTime);
+        }
+      });
+
+      // 當指標進入主題選擇按鈕時觸發朗讀
+      $('.theme-btn').mouseenter(function () {
+        if (canTrigger) {
+          const theme = $(this).data('theme');
+          readText(theme);
+
+          // 設定觸發後的延遲時間
+          canTrigger = false;
+          setTimeout(function () {
+            canTrigger = true;
+          }, delayTime);
+        }
+      });
+
+      // 主題選擇
+      $('.theme-btn').click(function () {
+        selectedTheme = $(this).data('theme');
+        $('#selectedTheme').text(selectedTheme);
+        readText('您選擇了' + selectedTheme);
+
+        // 設定觸發後的延遲時間
+        canTrigger = false;
+        setTimeout(function () {
+          canTrigger = true;
+          hideStep('theme');
+          showStep('difficulty');
+        }, delayTime);
+      });
+
+      // 當指標進入難度選擇按鈕時觸發朗讀
+      $('.difficulty-btn').mouseenter(function () {
+        if (canTrigger) {
+          const difficulty = $(this).data('difficulty');
+          readText(difficulty);
+
+          // 設定觸發後的延遲時間
+          canTrigger = false;
+          setTimeout(function () {
+            canTrigger = true;
+          }, delayTime);
+        }
+      });
+
+      // 難度選擇
+      $('.difficulty-btn').click(function () {
+        selectedDifficulty = $(this).data('difficulty');
+        $('#selectedDifficulty').text(selectedDifficulty);
+        readText('您選擇了' + selectedDifficulty);
+
+        // 設定觸發後的延遲時間
+        canTrigger = false;
+        setTimeout(function () {
+          canTrigger = true;
+          hideStep('difficulty');
+          showStep('options');
+        }, delayTime);
+      });
+
+      // 設定選擇
+      $('.next-btn').click(function () {
+        selectedOptions = []; // 清空設定
+
+        // 紀錄checkbox所選的設定
+        $('.form-check-input:checked').each(function () {
+          const option = $(this).data('option');
+          selectedOptions.push(option);
+        });
+
+        if ($.isEmptyObject(selectedOptions)) $('#selectedOptions').text('無');
+        else $('#selectedOptions').text(selectedOptions.join(', '));
+
+        // 設定觸發後的延遲時間
+        canTrigger = false;
+        setTimeout(function () {
+          canTrigger = true;
+          hideStep('options');
+          showStep('result');
+          readResult(); // 朗讀選擇結果
+        }, delayTime);
+      });
+
+      // 朗讀選擇結果
+      function readResult() {
+        const themeText = '主題維' + selectedTheme; // 維(為)
+        const difficultyText = '難度維' + selectedDifficulty; // 維(為)
+        const optionsText = '設定維' + (selectedOptions.length > 0 ? selectedOptions.join('與') : '無'); // 維(為)
+
+        const resultText = '您的選擇結果' + themeText + '.. ' + difficultyText + '.. ' + optionsText;
+        readText(resultText);
+      }
+
+      // 確認送出
+      $('.confirm-btn').click(function () {
+        // 傳遞資料
+        const data = postData(selectedTheme, selectedDifficulty);
+
+        if (data) {
+
+          // 跳轉，並將資料作為 URL 參數附加
+          window.location.href = 'g1start.html?questionBank=' + encodeURIComponent(JSON.stringify(data)) +
+            '&selectedOptions=' + encodeURIComponent(JSON.stringify(selectedOptions));
+
+        } else {
+          resetStep();
+          alert(data.errorMsg);
+        }
+      });
+
+      // 取消重選
+      $('.restart-btn').click(function () {
+        resetStep();
+      });
+    });
+  </script>
+</body>
+
+</html>
